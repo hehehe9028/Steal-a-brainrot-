@@ -99,11 +99,22 @@ local buttonCorner = Instance.new("UICorner")
 buttonCorner.CornerRadius = UDim.new(0, 10)
 buttonCorner.Parent = teleportButton
 
--- Dragging
-local dragging, dragInput, dragStart, startPos
+-- Cross-platform dragging (PC and Mobile)
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    main.Position = UDim2.new(
+        startPos.X.Scale, 
+        math.clamp(startPos.X.Offset + delta.X, 0, gui.AbsoluteSize.X - main.AbsoluteSize.X), 
+        startPos.Y.Scale, 
+        math.clamp(startPos.Y.Offset + delta.Y, 0, gui.AbsoluteSize.Y - main.AbsoluteSize.Y)
+    )
+end
 
 topBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         dragStart = input.Position
         startPos = main.Position
@@ -114,15 +125,16 @@ topBar.InputBegan:Connect(function(input)
         end)
     end
 end)
+
 topBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
         dragInput = input
     end
 end)
+
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input == dragInput then
-        local delta = input.Position - dragStart
-        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        updateDrag(input)
     end
 end)
 
