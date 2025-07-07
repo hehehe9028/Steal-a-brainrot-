@@ -1,0 +1,224 @@
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+if CoreGui:FindFirstChild("HOKALAZA_UI") then
+    CoreGui:FindFirstChild("HOKALAZA_UI"):Destroy()
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "HOKALAZA_UI"
+gui.ResetOnSpawn = false
+gui.Parent = CoreGui
+
+local main = Instance.new("Frame")
+main.Name = "MainFrame"
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.Size = UDim2.new(0, 250, 0, 160)
+main.BackgroundColor3 = Color3.fromRGB(33, 42, 62)
+main.BorderSizePixel = 0
+main.BackgroundTransparency = 0
+main.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 16)
+corner.Parent = main
+
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 38)
+topBar.BackgroundColor3 = Color3.fromRGB(41, 55, 80)
+topBar.BorderSizePixel = 0
+topBar.Parent = main
+
+local topCorner = Instance.new("UICorner")
+topCorner.CornerRadius = UDim.new(0, 16)
+topCorner.Parent = topBar
+
+local title = Instance.new("TextLabel")
+title.Text = "HOKALAZA"
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.BackgroundTransparency = 1
+title.Size = UDim2.new(1, -20, 1, 0)
+title.Position = UDim2.new(0, 10, 0, 0)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = topBar
+
+local by = Instance.new("TextLabel")
+by.Text = "by CRAZY"
+by.Font = Enum.Font.Gotham
+by.TextSize = 13
+by.TextColor3 = Color3.fromRGB(190,190,190)
+by.BackgroundTransparency = 1
+by.Size = UDim2.new(1, -20, 1, 0)
+by.Position = UDim2.new(0, 10, 0, 18)
+by.TextXAlignment = Enum.TextXAlignment.Left
+by.Parent = topBar
+
+local moonGravityButton = Instance.new("TextButton")
+moonGravityButton.Text = "Moon Gravity"
+moonGravityButton.Font = Enum.Font.GothamMedium
+moonGravityButton.TextSize = 16
+moonGravityButton.TextColor3 = Color3.fromRGB(255,255,255)
+moonGravityButton.BackgroundColor3 = Color3.fromRGB(85, 155, 100)
+moonGravityButton.BorderSizePixel = 0
+moonGravityButton.Size = UDim2.new(0, 200, 0, 32)
+moonGravityButton.Position = UDim2.new(0.5, -100, 0, 48)
+moonGravityButton.Parent = main
+
+local moonCorner = Instance.new("UICorner")
+moonCorner.CornerRadius = UDim.new(0, 10)
+moonCorner.Parent = moonGravityButton
+
+local moonState = Instance.new("TextLabel")
+moonState.Text = "OFF"
+moonState.Font = Enum.Font.Gotham
+moonState.TextSize = 14
+moonState.TextColor3 = Color3.fromRGB(200,200,200)
+moonState.BackgroundTransparency = 1
+moonState.Size = UDim2.new(0,40,0,32)
+moonState.Position = UDim2.new(1, -45, 0, 48)
+moonState.TextXAlignment = Enum.TextXAlignment.Right
+moonState.Parent = main
+
+local teleportButton = Instance.new("TextButton")
+teleportButton.Text = "Teleport Up"
+teleportButton.Font = Enum.Font.GothamMedium
+teleportButton.TextSize = 16
+teleportButton.TextColor3 = Color3.fromRGB(255,255,255)
+teleportButton.BackgroundColor3 = Color3.fromRGB(68, 132, 206)
+teleportButton.BorderSizePixel = 0
+teleportButton.Size = UDim2.new(0, 200, 0, 38)
+teleportButton.Position = UDim2.new(0.5, -100, 0, 90)
+teleportButton.Parent = main
+
+local buttonCorner = Instance.new("UICorner")
+buttonCorner.CornerRadius = UDim.new(0, 10)
+buttonCorner.Parent = teleportButton
+
+-- Dragging
+local dragging, dragInput, dragStart, startPos
+
+topBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+topBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- Moon Gravity Logic
+local moonGravityEnabled = false
+local gravityConnection
+
+local function resetGravity()
+    local character = Players.LocalPlayer.Character
+    if character then
+        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if humanoid and root then
+            humanoid.JumpPower = 50
+            root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
+        end
+    end
+end
+
+moonGravityButton.MouseButton1Click:Connect(function()
+    moonGravityEnabled = not moonGravityEnabled
+    if moonGravityEnabled then
+        moonGravityButton.BackgroundColor3 = Color3.fromRGB(68, 206, 132)
+        moonState.Text = "ON"
+        local character = Players.LocalPlayer.Character
+        if character then
+            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if humanoid and root then
+                humanoid.UseJumpPower = true
+                humanoid.JumpPower = 96
+                if gravityConnection then gravityConnection:Disconnect() end
+                gravityConnection = RunService.Stepped:Connect(function()
+                    if not moonGravityEnabled then
+                        gravityConnection:Disconnect()
+                        resetGravity()
+                        return
+                    end
+                    if root.Velocity.Y < 0 then
+                        root.Velocity = Vector3.new(root.Velocity.X, root.Velocity.Y * 0.9, root.Velocity.Z)
+                    end
+                end)
+            end
+        end
+    else
+        moonGravityButton.BackgroundColor3 = Color3.fromRGB(85, 155, 100)
+        moonState.Text = "OFF"
+        if gravityConnection then
+            gravityConnection:Disconnect()
+            gravityConnection = nil
+        end
+        resetGravity()
+    end
+end)
+
+-- Teleport logic
+local teleportUp = true
+teleportButton.MouseButton1Click:Connect(function()
+    local character = Players.LocalPlayer.Character
+    if character then
+        local root = character:FindFirstChild("HumanoidRootPart")
+        if root then
+            if teleportUp then
+                root.CFrame = root.CFrame + Vector3.new(0,150,0)
+                teleportButton.Text = "Teleport Down"
+            else
+                root.CFrame = root.CFrame - Vector3.new(0,189,0)
+                teleportButton.Text = "Teleport Up"
+            end
+            teleportUp = not teleportUp
+        end
+    end
+end)
+
+-- Insert Key Toggle
+local uiVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.Insert then
+        if uiVisible then
+            -- Reset moon gravity if hiding UI
+            if moonGravityEnabled then
+                moonGravityEnabled = false
+                moonGravityButton.BackgroundColor3 = Color3.fromRGB(85, 155, 100)
+                moonState.Text = "OFF"
+                if gravityConnection then
+                    gravityConnection:Disconnect()
+                    gravityConnection = nil
+                end
+                resetGravity()
+            end
+            main.Visible = false
+            uiVisible = false
+        else
+            main.Visible = true
+            uiVisible = true
+        end
+    end
+end)
