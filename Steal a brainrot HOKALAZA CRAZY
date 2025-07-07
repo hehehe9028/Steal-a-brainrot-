@@ -1,0 +1,85 @@
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KeySystemGui"
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+-- Main Frame
+local Frame = Instance.new("Frame", ScreenGui)
+Frame.Size = UDim2.new(0, 300, 0, 200)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -100)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+
+local UICorner = Instance.new("UICorner", Frame)
+UICorner.CornerRadius = UDim.new(0, 12)
+
+-- Title
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "Key System"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+-- Key Input
+local KeyBox = Instance.new("TextBox", Frame)
+KeyBox.Size = UDim2.new(0.8, 0, 0, 36)
+KeyBox.Position = UDim2.new(0.1, 0, 0.3, 0)
+KeyBox.PlaceholderText = "Enter Key"
+KeyBox.Text = ""
+KeyBox.Font = Enum.Font.Gotham
+KeyBox.TextSize = 16
+KeyBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+KeyBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local KeyBoxCorner = Instance.new("UICorner", KeyBox)
+KeyBoxCorner.CornerRadius = UDim.new(0, 8)
+
+-- Submit Button
+local Submit = Instance.new("TextButton", Frame)
+Submit.Size = UDim2.new(0.8, 0, 0, 36)
+Submit.Position = UDim2.new(0.1, 0, 0.55, 0)
+Submit.Text = "Submit"
+Submit.Font = Enum.Font.GothamBold
+Submit.TextSize = 18
+Submit.BackgroundColor3 = Color3.fromRGB(80, 200, 120)
+Submit.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local SubmitCorner = Instance.new("UICorner", Submit)
+SubmitCorner.CornerRadius = UDim.new(0, 8)
+
+-- Get Key Button
+local GetKey = Instance.new("TextButton", Frame)
+GetKey.Size = UDim2.new(0.8, 0, 0, 36)
+GetKey.Position = UDim2.new(0.1, 0, 0.75, 0)
+GetKey.Text = "Get Key (Discord)"
+GetKey.Font = Enum.Font.Gotham
+GetKey.TextSize = 16
+GetKey.BackgroundColor3 = Color3.fromRGB(40, 130, 255)
+GetKey.TextColor3 = Color3.fromRGB(255, 255, 255)
+
+local GetKeyCorner = Instance.new("UICorner", GetKey)
+GetKeyCorner.CornerRadius = UDim.new(0, 8)
+
+-- Key Check
+local correctKey = "STEALACRAZY"
+
+Submit.MouseButton1Click:Connect(function()
+    if KeyBox.Text == correctKey then
+        Frame:Destroy()
+        -- ✅ Load Actual Script After Key Verified:
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/hehehe9028/Steal-a-brainrot-/refs/heads/main/Steal%20a%20brainrot%20HOKALAZA"))()
+    else
+        KeyBox.Text = ""
+        KeyBox.PlaceholderText = "Wrong Key! Try Again"
+    end
+end)
+
+-- Open Discord Link (Copies link to clipboard)
+GetKey.MouseButton1Click:Connect(function()
+    setclipboard("https://discord.gg/4myWDtW8yj")
+end)
