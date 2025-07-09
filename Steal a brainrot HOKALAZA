@@ -1,236 +1,326 @@
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/SaveManager.lua"))()
+
+local player = game:GetService("Players").LocalPlayer
+local shop = player.PlayerGui:FindFirstChild("Main") and player.PlayerGui.Main:FindFirstChild("CoinsShop")
 local RunService = game:GetService("RunService")
 
-if CoreGui:FindFirstChild("HOKALAZA_UI") then
-    CoreGui:FindFirstChild("HOKALAZA_UI"):Destroy()
+local Window = Fluent:CreateWindow({
+    Title = "HOKALAZA  |",
+    SubTitle = "Steal a Brainrot",
+    TabWidth = 130,
+    Size = UDim2.fromOffset(490, 400),
+    Acrylic = true,
+    Theme = "Amethyst",
+    MinimizeKey = Enum.KeyCode.LeftControl
+})
+
+local Tabs = {
+    Home = Window:AddTab({ Title = "Home", Icon = "home" }),
+    Main = Window:AddTab({ Title = "Main", Icon = "rocket" }),
+    Server = Window:AddTab({ Title = "Server", Icon = "server" }),
+    Settings = Window:AddTab({ Title = "Settings", Icon = "settings" }),
+}
+
+-- === HOME TAB: Server link and features ===
+Tabs.Home:AddParagraph({
+    Title = "Discord Server",
+    Content = "Join: https://discord.gg/4myWDtW8yj"
+})
+Tabs.Home:AddParagraph({
+    Title = "Features",
+    Content = [[
+• Moon Gravity (low gravity jump)
+• Teleport Up/Down (toggle)
+• Speed Boost Slider
+• Invisibility Cloak Support
+• ESP (Players)
+• Server Hop / Rejoin
+• Keybinds (G: Teleport, F: Shop)
+    ]]
+})
+
+-- === MAIN TAB: Your main features (example with ESP/Teleport/Moon Gravity) ===
+local plotName
+for _, plot in ipairs(workspace.Plots:GetChildren()) do
+    if plot:FindFirstChild("YourBase", true).Enabled then
+        plotName = plot.Name
+        break
+    end
 end
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "HOKALAZA_UI"
-gui.ResetOnSpawn = false
-gui.Parent = CoreGui
+local remainingTime = workspace.Plots[plotName].Purchases.PlotBlock.Main.BillboardGui.RemainingTime
+local rtp = Tabs.Main:AddParagraph({ Title = "Lock Time: " .. remainingTime.Text })
 
-local main = Instance.new("Frame")
-main.Name = "MainFrame"
-main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.Position = UDim2.new(0.5, 0, 0.5, 0)
-main.Size = UDim2.new(0, 250, 0, 160)
-main.BackgroundColor3 = Color3.fromRGB(33, 42, 62)
-main.BorderSizePixel = 0
-main.BackgroundTransparency = 0
-main.Parent = gui
+task.spawn(function()
+    while true do
+        rtp:SetTitle("Lock Time: " .. remainingTime.Text)
+        task.wait(0.25)
+    end
+end)
 
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 16)
-corner.Parent = main
-
-local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(1, 0, 0, 38)
-topBar.BackgroundColor3 = Color3.fromRGB(41, 55, 80)
-topBar.BorderSizePixel = 0
-topBar.Parent = main
-
-local topCorner = Instance.new("UICorner")
-topCorner.CornerRadius = UDim.new(0, 16)
-topCorner.Parent = topBar
-
-local title = Instance.new("TextLabel")
-title.Text = "HOKALAZA"
-title.Font = Enum.Font.GothamBold
-title.TextSize = 18
-title.TextColor3 = Color3.fromRGB(255,255,255)
-title.BackgroundTransparency = 1
-title.Size = UDim2.new(1, -20, 1, 0)
-title.Position = UDim2.new(0, 10, 0, 0)
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = topBar
-
-local by = Instance.new("TextLabel")
-by.Text = "by CRAZY"
-by.Font = Enum.Font.Gotham
-by.TextSize = 13
-by.TextColor3 = Color3.fromRGB(190,190,190)
-by.BackgroundTransparency = 1
-by.Size = UDim2.new(1, -20, 1, 0)
-by.Position = UDim2.new(0, 10, 0, 18)
-by.TextXAlignment = Enum.TextXAlignment.Left
-by.Parent = topBar
-
-local moonGravityButton = Instance.new("TextButton")
-moonGravityButton.Text = "Moon Gravity"
-moonGravityButton.Font = Enum.Font.GothamMedium
-moonGravityButton.TextSize = 16
-moonGravityButton.TextColor3 = Color3.fromRGB(255,255,255)
-moonGravityButton.BackgroundColor3 = Color3.fromRGB(85, 155, 100)
-moonGravityButton.BorderSizePixel = 0
-moonGravityButton.Size = UDim2.new(0, 200, 0, 32)
-moonGravityButton.Position = UDim2.new(0.5, -100, 0, 48)
-moonGravityButton.Parent = main
-
-local moonCorner = Instance.new("UICorner")
-moonCorner.CornerRadius = UDim.new(0, 10)
-moonCorner.Parent = moonGravityButton
-
-local moonState = Instance.new("TextLabel")
-moonState.Text = "OFF"
-moonState.Font = Enum.Font.Gotham
-moonState.TextSize = 14
-moonState.TextColor3 = Color3.fromRGB(200,200,200)
-moonState.BackgroundTransparency = 1
-moonState.Size = UDim2.new(0,40,0,32)
-moonState.Position = UDim2.new(1, -45, 0, 48)
-moonState.TextXAlignment = Enum.TextXAlignment.Right
-moonState.Parent = main
-
-local teleportButton = Instance.new("TextButton")
-teleportButton.Text = "Teleport Up"
-teleportButton.Font = Enum.Font.GothamMedium
-teleportButton.TextSize = 16
-teleportButton.TextColor3 = Color3.fromRGB(255,255,255)
-teleportButton.BackgroundColor3 = Color3.fromRGB(68, 132, 206)
-teleportButton.BorderSizePixel = 0
-teleportButton.Size = UDim2.new(0, 200, 0, 38)
-teleportButton.Position = UDim2.new(0.5, -100, 0, 90)
-teleportButton.Parent = main
-
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 10)
-buttonCorner.Parent = teleportButton
-
--- Cross-platform dragging (PC and Mobile)
-local dragging = false
-local dragInput, dragStart, startPos
-
-local function updateDrag(input)
-    local delta = input.Position - dragStart
-    main.Position = UDim2.new(
-        startPos.X.Scale, 
-        math.clamp(startPos.X.Offset + delta.X, 0, gui.AbsoluteSize.X - main.AbsoluteSize.X), 
-        startPos.Y.Scale, 
-        math.clamp(startPos.Y.Offset + delta.Y, 0, gui.AbsoluteSize.Y - main.AbsoluteSize.Y)
-    )
-end
-
-topBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = main.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
+-- Moon Gravity logic
+local moonGravityEnabled = false
+local gravityConnection
+Tabs.Main:AddButton({
+    Title = "Moon Gravity",
+    Description = "Toggle moon gravity (low gravity jump)",
+    Callback = function()
+        moonGravityEnabled = not moonGravityEnabled
+        if moonGravityEnabled then
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if humanoid and root then
+                    humanoid.UseJumpPower = true
+                    humanoid.JumpPower = 96
+                    if gravityConnection then gravityConnection:Disconnect() end
+                    gravityConnection = RunService.Stepped:Connect(function()
+                        if not moonGravityEnabled then
+                            gravityConnection:Disconnect()
+                            gravityConnection = nil
+                            humanoid.JumpPower = 50
+                            root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
+                            return
+                        end
+                        if root.Velocity.Y < 0 then
+                            root.Velocity = Vector3.new(root.Velocity.X, root.Velocity.Y * 0.9, root.Velocity.Z)
+                        end
+                    end)
+                end
             end
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Moon Gravity ON", Duration = 2 })
+        else
+            if gravityConnection then
+                gravityConnection:Disconnect()
+                gravityConnection = nil
+            end
+            local character = player.Character
+            if character then
+                local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if humanoid and root then
+                    humanoid.JumpPower = 50
+                    root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
+                end
+            end
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Moon Gravity OFF", Duration = 2 })
+        end
+    end
+})
+
+-- Teleport Up/Down logic (toggle)
+local teleportUp = true
+Tabs.Main:AddButton({
+    Title = "Teleport Up/Down",
+    Description = "Click once to teleport up, again to teleport down.",
+    Callback = function()
+        local character = player.Character
+        if character then
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                if teleportUp then
+                    root.CFrame = root.CFrame + Vector3.new(0,150,0)
+                    Fluent:Notify({ Title = "HOKALAZA", Content = "Teleported Up", Duration = 2 })
+                else
+                    root.CFrame = root.CFrame - Vector3.new(0,189,0)
+                    Fluent:Notify({ Title = "HOKALAZA", Content = "Teleported Down", Duration = 2 })
+                end
+                teleportUp = not teleportUp
+            end
+        end
+    end
+})
+
+local SpeedSlider = Tabs.Main:AddSlider("Slider", {
+    Title = "Speed Boost(1.5-1.7 working fine)",
+    Default = 0,
+    Min = 0,
+    Max = 6,
+    Rounding = 1,
+})
+
+Tabs.Main:AddParagraph({
+    Title = "Use Speed Coil/Invisibility Cloak For Higher Speed",
+})
+
+local currentSpeed = 0
+SpeedSlider:OnChanged(function(Value)
+    currentSpeed = tonumber(Value) or 0
+end)
+
+local function sSpeed(character)
+    local hum = character:WaitForChild("Humanoid")
+    local hb = game:GetService("RunService").Heartbeat
+    task.spawn(function()
+        while character and hum and hum.Parent do
+            if currentSpeed > 0 and hum.MoveDirection.Magnitude > 0 then
+                character:TranslateBy(hum.MoveDirection * currentSpeed * hb:Wait() * 10)
+            end
+            task.wait()
+        end
+    end)
+end
+
+local function onCharacterAdded(character)
+    sSpeed(character)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+if player.Character then onCharacterAdded(player.Character) end
+
+Tabs.Main:AddButton({
+    Title = "Invisible",
+    Description = "Use Invisibility Cloak",
+    Callback = function()
+        local character = player.Character or player.CharacterAdded:Wait()
+        local cloak = character:FindFirstChild("Invisibility Cloak")
+        if cloak and cloak:GetAttribute("SpeedModifier") == 2 then
+            cloak.Parent = workspace
+        else
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Use Invisibility Cloak First", Duration = 2 })
+        end
+    end
+})
+
+-- ESP
+local Players = game:GetService("Players")
+local espEnabled = false
+local espInstances = {}
+
+local function createESP(targetPlayer)
+    if not espEnabled then return end
+    if targetPlayer == Players.LocalPlayer then return end
+    local character = targetPlayer.Character
+    if not character then return end
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    if espInstances[targetPlayer] then
+        espInstances[targetPlayer]:Destroy()
+        espInstances[targetPlayer] = nil
+    end
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "HOKALAZA_ESP"
+    bb.Adornee = root
+    bb.Size = UDim2.new(0, 110, 0, 28)
+    bb.AlwaysOnTop = true
+    bb.Parent = root
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = UDim2.new(1,0,1,0)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = targetPlayer.DisplayName
+    lbl.TextColor3 = Color3.fromRGB(255,255,0)
+    lbl.TextStrokeTransparency = 0.5
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextScaled = true
+    lbl.Parent = bb
+    espInstances[targetPlayer] = bb
+end
+
+local function removeESP(targetPlayer)
+    if espInstances[targetPlayer] then
+        espInstances[targetPlayer]:Destroy()
+        espInstances[targetPlayer] = nil
+    end
+end
+
+local function setPlayerESP(enable)
+    espEnabled = enable
+    if enable then
+        for _, p in ipairs(Players:GetPlayers()) do
+            createESP(p)
+        end
+    else
+        for _, bb in pairs(espInstances) do
+            bb:Destroy()
+        end
+        espInstances = {}
+    end
+end
+
+Players.PlayerAdded:Connect(function(p)
+    if espEnabled then
+        p.CharacterAdded:Connect(function()
+            task.wait(0.5)
+            createESP(p)
         end)
     end
 end)
-
-topBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
+Players.PlayerRemoving:Connect(function(p)
+    removeESP(p)
 end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        updateDrag(input)
-    end
-end)
-
--- Moon Gravity Logic
-local moonGravityEnabled = false
-local gravityConnection
-
-local function resetGravity()
-    local character = Players.LocalPlayer.Character
-    if character then
-        local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-        local root = character:FindFirstChild("HumanoidRootPart")
-        if humanoid and root then
-            humanoid.JumpPower = 50
-            root.Velocity = Vector3.new(root.Velocity.X, 0, root.Velocity.Z)
+for _,p in ipairs(Players:GetPlayers()) do
+    p.CharacterAdded:Connect(function()
+        if espEnabled then
+            task.wait(0.5)
+            createESP(p)
         end
-    end
+    end)
 end
 
-moonGravityButton.MouseButton1Click:Connect(function()
-    moonGravityEnabled = not moonGravityEnabled
-    if moonGravityEnabled then
-        moonGravityButton.BackgroundColor3 = Color3.fromRGB(68, 206, 132)
-        moonState.Text = "ON"
-        local character = Players.LocalPlayer.Character
-        if character then
-            local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-            local root = character:FindFirstChild("HumanoidRootPart")
-            if humanoid and root then
-                humanoid.UseJumpPower = true
-                humanoid.JumpPower = 96
-                if gravityConnection then gravityConnection:Disconnect() end
-                gravityConnection = RunService.Stepped:Connect(function()
-                    if not moonGravityEnabled then
-                        gravityConnection:Disconnect()
-                        resetGravity()
-                        return
-                    end
-                    if root.Velocity.Y < 0 then
-                        root.Velocity = Vector3.new(root.Velocity.X, root.Velocity.Y * 0.9, root.Velocity.Z)
-                    end
-                end)
-            end
-        end
-    else
-        moonGravityButton.BackgroundColor3 = Color3.fromRGB(85, 155, 100)
-        moonState.Text = "OFF"
-        if gravityConnection then
-            gravityConnection:Disconnect()
-            gravityConnection = nil
-        end
-        resetGravity()
+Tabs.Main:AddButton({
+    Title = "Toggle Players ESP",
+    Description = "Shows ESP for all players",
+    Callback = function()
+        espEnabled = not espEnabled
+        setPlayerESP(espEnabled)
+        Fluent:Notify({ Title = "HOKALAZA", Content = "Players ESP: " .. (espEnabled and "ON" or "OFF"), Duration = 2 })
     end
-end)
+})
 
--- Teleport logic
-local teleportUp = true
-teleportButton.MouseButton1Click:Connect(function()
-    local character = Players.LocalPlayer.Character
-    if character then
-        local root = character:FindFirstChild("HumanoidRootPart")
-        if root then
-            if teleportUp then
-                root.CFrame = root.CFrame + Vector3.new(0,150,0)
-                teleportButton.Text = "Teleport Down"
+-- === SERVER TAB: Rejoin and Server Hop ===
+Tabs.Server:AddButton({
+    Title = "Rejoin",
+    Description = "Rejoins the same server.",
+    Callback = function()
+        local ts = game:GetService("TeleportService")
+        local p = game:GetService("Players").LocalPlayer
+        ts:TeleportToPlaceInstance(game.PlaceId, game.JobId, p)
+    end
+})
+Tabs.Server:AddButton({
+    Title = "Server Hop",
+    Description = "Joins a different server.",
+    Callback = function()
+        local PlaceID = game.PlaceId
+        local HttpService = game:GetService("HttpService")
+        local TeleportService = game:GetService("TeleportService")
+        local AllIDs = {}
+        local foundAnything = ""
+        local actualHour = os.date("!*t").hour
+
+        local function TPReturner()
+            local Site
+            if foundAnything == "" then
+                Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100'))
             else
-                root.CFrame = root.CFrame - Vector3.new(0,189,0)
-                teleportButton.Text = "Teleport Up"
+                Site = HttpService:JSONDecode(game:HttpGet('https://games.roblox.com/v1/games/' .. PlaceID .. '/servers/Public?sortOrder=Asc&limit=100&cursor=' .. foundAnything))
             end
-            teleportUp = not teleportUp
-        end
-    end
-end)
-
--- Insert Key Toggle
-local uiVisible = true
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.Insert then
-        if uiVisible then
-            -- Reset moon gravity if hiding UI
-            if moonGravityEnabled then
-                moonGravityEnabled = false
-                moonGravityButton.BackgroundColor3 = Color3.fromRGB(85, 155, 100)
-                moonState.Text = "OFF"
-                if gravityConnection then
-                    gravityConnection:Disconnect()
-                    gravityConnection = nil
+            local ID = ""
+            if Site.nextPageCursor and Site.nextPageCursor ~= "null" and Site.nextPageCursor ~= nil then
+                foundAnything = Site.nextPageCursor
+            end
+            for _,v in pairs(Site.data) do
+                if tonumber(v.maxPlayers) > tonumber(v.playing) then
+                    ID = tostring(v.id)
+                    TeleportService:TeleportToPlaceInstance(PlaceID, ID, player)
+                    break
                 end
-                resetGravity()
             end
-            main.Visible = false
-            uiVisible = false
-        else
-            main.Visible = true
-            uiVisible = true
         end
+
+        TPReturner()
     end
-end)
+})
+
+Tabs.Server:AddParagraph({
+    Title = "Discord Server",
+    Content = "Join the official server:\nhttps://discord.gg/4myWDtW8yj"
+})
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+SaveManager:SetLibrary(Fluent)
+SaveManager:BuildConfigSection(Tabs.Settings)
+SaveManager:LoadAutoloadConfig()
+Window:SelectTab(1)
