@@ -37,6 +37,9 @@ Tabs.Home:AddParagraph({
 • ESP (Players)
 • Server Hop / Rejoin
 • Keybinds (G: Teleport, F: Shop)
+• Force Reset
+• Hitbox ESP
+• God Mode & Infinite Jump (activate God Mode first)
     ]]
 })
 
@@ -266,6 +269,162 @@ Tabs.Main:AddButton({
         espEnabled = not espEnabled
         setPlayerESP(espEnabled)
         Fluent:Notify({ Title = "HOKALAZA", Content = "Players ESP: " .. (espEnabled and "ON" or "OFF"), Duration = 2 })
+    end
+})
+
+-- === ADDED: Force Reset Feature ===
+Tabs.Main:AddButton({
+    Title = "Force Reset",
+    Description = "Instantly resets your character.",
+    Callback = function()
+        local character = player.Character
+        if character then
+            local humanoid = character:FindFirstChildOfClass("Humanoid")
+            if humanoid then
+                humanoid.Health = 0
+                Fluent:Notify({ Title = "HOKALAZA", Content = "Force Reset Triggered!", Duration = 2 })
+            else
+                Fluent:Notify({ Title = "HOKALAZA", Content = "Humanoid not found!", Duration = 2 })
+            end
+        end
+    end
+})
+
+-- === ADDED: Hitbox ESP Feature ===
+local hitboxEnabled = false
+local hitboxInstances = {}
+
+local function clearHitbox()
+    for _, adorn in ipairs(hitboxInstances) do
+        if adorn and adorn.Parent then
+            adorn:Destroy()
+        end
+    end
+    hitboxInstances = {}
+end
+
+local function applyHitboxToCharacter(character)
+    for _, part in ipairs(character:GetChildren()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            local box = Instance.new("BoxHandleAdornment")
+            box.Adornee = part
+            box.AlwaysOnTop = true
+            box.ZIndex = 10
+            box.Size = part.Size
+            box.Transparency = 0.7
+            box.Color3 = Color3.fromRGB(170, 0, 255)
+            box.Parent = part
+            table.insert(hitboxInstances, box)
+        end
+    end
+end
+
+local function refreshHitbox()
+    clearHitbox()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= player and plr.Character then
+            applyHitboxToCharacter(plr.Character)
+        end
+    end
+end
+
+Tabs.Main:AddButton({
+    Title = "Toggle Hitbox ESP",
+    Description = "Highlights player hitboxes (except your own).",
+    Callback = function()
+        hitboxEnabled = not hitboxEnabled
+        if hitboxEnabled then
+            refreshHitbox()
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Hitbox ESP ON", Duration = 2 })
+        else
+            clearHitbox()
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Hitbox ESP OFF", Duration = 2 })
+        end
+    end
+})
+
+Players.PlayerAdded:Connect(function(plr)
+    if hitboxEnabled then
+        plr.CharacterAdded:Connect(function(char)
+            task.wait(1)
+            applyHitboxToCharacter(char)
+        end)
+    end
+end)
+for _, plr in ipairs(Players:GetPlayers()) do
+    if hitboxEnabled then
+        plr.CharacterAdded:Connect(function(char)
+            task.wait(1)
+            applyHitboxToCharacter(char)
+        end)
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    if hitboxEnabled then
+        refreshHitbox()
+    end
+end)
+
+-- === GOD MODE ===
+local godModeEnabled = false
+local healthConnection
+Tabs.Main:AddButton({
+    Title = "God Mode",
+    Description = "Makes you invincible. Activate before Infinite Jump.",
+    Callback = function()
+        godModeEnabled = not godModeEnabled
+        local character = player.Character or player.CharacterAdded:Wait()
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if godModeEnabled then
+            if humanoid then
+                if healthConnection then healthConnection:Disconnect() end
+                healthConnection = humanoid.HealthChanged:Connect(function()
+                    if godModeEnabled then humanoid.Health = humanoid.MaxHealth end
+                end)
+                Fluent:Notify({ Title = "HOKALAZA", Content = "God Mode ON", Duration = 2 })
+            else
+                Fluent:Notify({ Title = "HOKALAZA", Content = "Humanoid not found!", Duration = 2 })
+            end
+        else
+            if healthConnection then healthConnection:Disconnect() end
+            Fluent:Notify({ Title = "HOKALAZA", Content = "God Mode OFF", Duration = 2 })
+        end
+    end
+})
+
+-- === INFINITE JUMP ===
+local infJumpEnabled = false
+local jumpConnection
+Tabs.Main:AddButton({
+    Title = "Infinite Jump",
+    Description = "Jump infinitely. Activate God Mode first!",
+    Callback = function()
+        if not godModeEnabled then
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Please activate God Mode first!", Duration = 2 })
+            return
+        end
+        infJumpEnabled = not infJumpEnabled
+        if infJumpEnabled then
+            if not jumpConnection then
+                jumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+                    if infJumpEnabled then
+                        local character = player.Character or player.CharacterAdded:Wait()
+                        local humanoid = character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                        end
+                    end
+                end)
+            end
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Infinite Jump ON", Duration = 2 })
+        else
+            if jumpConnection then
+                jumpConnection:Disconnect()
+                jumpConnection = nil
+            end
+            Fluent:Notify({ Title = "HOKALAZA", Content = "Infinite Jump OFF", Duration = 2 })
+        end
     end
 })
 
